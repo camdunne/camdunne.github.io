@@ -1387,7 +1387,7 @@
 		-webkit-transition: border-color 0.35s ease-in-out, color 0.35s ease-in-out;
 		-ms-transition: border-color 0.35s ease-in-out, color 0.35s ease-in-out;
 		transition: border-color 0.35s ease-in-out, color 0.35s ease-in-out;
-		color: #35b88f;
+		color: white;
 		text-shadow: 0 0 0.5px rgba(53, 184, 143, 0.25);
 		text-decoration: none;
 		border-bottom: dotted 1px rgba(53, 184, 143, 0.5);
@@ -2001,14 +2001,14 @@
 		color: #fff;
 		text-shadow: 0 0 0.5px rgba(255, 255, 255, 0.25);
 		text-align: center;
-		background: #35b88f url("images/banner.svg") bottom center no-repeat;
+		background: black url("images/banner.svg") bottom center no-repeat;
 		padding: 5em 0 5em 0;
 		margin: 0;
 		background-size: 125% auto;
 	}
 
 		#banner .button {
-			color: #35b882;
+			color: black;
 			text-shadow: 0 0 0.5px rgba(53, 184, 130, 0.25);
 		}
 
