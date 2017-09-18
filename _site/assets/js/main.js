@@ -1,161 +1,284 @@
 /*
-	Overflow by HTML5 UP
+	Editorial by HTML5 UP
 	html5up.net | @ajlkn
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
 
 (function($) {
 
-	var settings = {
-
-		// Full screen header?
-			fullScreenHeader: true,
-
-		// Parallax background effect?
-			parallax: true,
-
-		// Parallax factor (lower = more intense, higher = less intense).
-			parallaxFactor: 10
-
-	};
-
 	skel.breakpoints({
-		wide: '(max-width: 1680px)',
-		normal: '(max-width: 1080px)',
-		narrow: '(max-width: 840px)',
-		mobile: '(max-width: 736px)'
+		xlarge: '(max-width: 1680px)',
+		large: '(max-width: 1280px)',
+		medium: '(max-width: 980px)',
+		small: '(max-width: 736px)',
+		xsmall: '(max-width: 480px)',
+		'xlarge-to-max': '(min-width: 1681px)',
+		'small-to-xlarge': '(min-width: 481px) and (max-width: 1680px)'
 	});
 
 	$(function() {
 
 		var	$window = $(window),
+			$head = $('head'),
 			$body = $('body');
 
-		if (skel.vars.mobile) {
+		// Disable animations/transitions ...
 
-			settings.parallax = false;
-			$body.addClass('is-scroll');
+			// ... until the page has loaded.
+				$body.addClass('is-loading');
 
-		}
+				$window.on('load', function() {
+					setTimeout(function() {
+						$body.removeClass('is-loading');
+					}, 100);
+				});
 
-		// Disable animations/transitions until the page has loaded.
-			$body.addClass('is-loading');
+			// ... when resizing.
+				var resizeTimeout;
 
-			$window.on('load', function() {
-				$body.removeClass('is-loading');
-			});
+				$window.on('resize', function() {
 
-		// CSS polyfills (IE<9).
-			if (skel.vars.IEVersion < 9)
-				$(':last-child').addClass('last-child');
+					// Mark as resizing.
+						$body.addClass('is-resizing');
+
+					// Unmark after delay.
+						clearTimeout(resizeTimeout);
+
+						resizeTimeout = setTimeout(function() {
+							$body.removeClass('is-resizing');
+						}, 100);
+
+				});
 
 		// Fix: Placeholder polyfill.
 			$('form').placeholder();
 
-		// Prioritize "important" elements on mobile.
-			skel.on('+mobile -mobile', function() {
+		// Prioritize "important" elements on medium.
+			skel.on('+medium -medium', function() {
 				$.prioritize(
-					'.important\\28 mobile\\29',
-					skel.breakpoint('mobile').active
+					'.important\\28 medium\\29',
+					skel.breakpoint('medium').active
 				);
 			});
 
-		// Scrolly links.
-			$('.scrolly-middle').scrolly({
-				speed: 1000,
-				anchor: 'middle'
-			});
+		// Fixes.
 
-			$('.scrolly').scrolly({
-				speed: 1000,
-				offset: function() { return (skel.breakpoint('mobile').active ? 70 : 190); }
-			});
+			// Object fit images.
+				if (!skel.canUse('object-fit')
+				||	skel.vars.browser == 'safari')
+					$('.image.object').each(function() {
 
-		// Full screen header.
-			if (settings.fullScreenHeader) {
+						var $this = $(this),
+							$img = $this.children('img');
 
-				var $header = $('#header');
+						// Hide original image.
+							$img.css('opacity', '0');
 
-				if ($header.length > 0) {
+						// Set background.
+							$this
+								.css('background-image', 'url("' + $img.attr('src') + '")')
+								.css('background-size', $img.css('object-fit') ? $img.css('object-fit') : 'cover')
+								.css('background-position', $img.css('object-position') ? $img.css('object-position') : 'center');
 
-					var $header_header = $header.find('header');
-
-					$window
-						.on('resize.overflow_fsh', function() {
-
-							if (skel.breakpoint('mobile').active)
-								$header.css('padding', '');
-							else {
-
-								var p = Math.max(192, ($window.height() - $header_header.outerHeight()) / 2);
-								$header.css('padding', p + 'px 0 ' + p + 'px 0');
-
-							}
-
-						})
-						.trigger('resize.overflow_fsh');
-
-					$window.load(function() {
-						$window.trigger('resize.overflow_fsh');
 					});
+
+		// Sidebar.
+			var $sidebar = $('#sidebar'),
+				$sidebar_inner = $sidebar.children('.inner');
+
+			// Inactive by default on <= large.
+				skel
+					.on('+large', function() {
+						$sidebar.addClass('inactive');
+					})
+					.on('-large !large', function() {
+						$sidebar.removeClass('inactive');
+					});
+
+			// Hack: Workaround for Chrome/Android scrollbar position bug.
+				if (skel.vars.os == 'android'
+				&&	skel.vars.browser == 'chrome')
+					$('<style>#sidebar .inner::-webkit-scrollbar { display: none; }</style>')
+						.appendTo($head);
+
+			// Toggle.
+				if (skel.vars.IEVersion > 9) {
+
+					$('<a href="#sidebar" class="toggle">Toggle</a>')
+						.appendTo($sidebar)
+						.on('click', function(event) {
+
+							// Prevent default.
+								event.preventDefault();
+								event.stopPropagation();
+
+							// Toggle.
+								$sidebar.toggleClass('inactive');
+
+						});
 
 				}
 
-			}
+			// Events.
 
-		// Parallax background.
+				// Link clicks.
+					$sidebar.on('click', 'a', function(event) {
 
-			// Disable parallax on IE (smooth scrolling is jerky), and on mobile platforms (= better performance).
-				if (skel.vars.browser == 'ie'
-				||	skel.vars.mobile)
-					settings.parallax = false;
+						// >large? Bail.
+							if (!skel.breakpoint('large').active)
+								return;
 
-			if (settings.parallax) {
+						// Vars.
+							var $a = $(this),
+								href = $a.attr('href'),
+								target = $a.attr('target');
 
-				var $dummy = $(), $bg;
+						// Prevent default.
+							event.preventDefault();
+							event.stopPropagation();
 
-				$window
-					.on('scroll.overflow_parallax', function() {
+						// Check URL.
+							if (!href || href == '#' || href == '')
+								return;
 
-						// Adjust background position.
-							$bg.css('background-position', 'center ' + (-1 * (parseInt($window.scrollTop()) / settings.parallaxFactor)) + 'px');
+						// Hide sidebar.
+							$sidebar.addClass('inactive');
 
-					})
-					.on('resize.overflow_parallax', function() {
+						// Redirect to href.
+							setTimeout(function() {
 
-						// If we're in a situation where we need to temporarily disable parallax, do so.
-							if (!skel.breakpoint('wide').active
-							||	skel.breakpoint('narrow').active) {
+								if (target == '_blank')
+									window.open(href);
+								else
+									window.location.href = href;
 
-								$body.css('background-position', '');
-								$bg = $dummy;
+							}, 500);
 
-							}
+					});
 
-						// Otherwise, continue as normal.
-							else
-								$bg = $body;
+				// Prevent certain events inside the panel from bubbling.
+					$sidebar.on('click touchend touchstart touchmove', function(event) {
 
-						// Trigger scroll handler.
-							$window.triggerHandler('scroll.overflow_parallax');
+						// >large? Bail.
+							if (!skel.breakpoint('large').active)
+								return;
 
-					})
-					.trigger('resize.overflow_parallax');
+						// Prevent propagation.
+							event.stopPropagation();
 
-			}
+					});
 
-		// Poptrox.
-			$('.gallery').poptrox({
-				useBodyOverflow: false,
-				usePopupEasyClose: false,
-				overlayColor: '#0a1919',
-				overlayOpacity: (skel.vars.IEVersion < 9 ? 0 : 0.75),
-				usePopupDefaultStyling: false,
-				usePopupCaption: true,
-				popupLoaderText: '',
-				windowMargin: 10,
-				usePopupNav: true
-			});
+				// Hide panel on body click/tap.
+					$body.on('click touchend', function(event) {
+
+						// >large? Bail.
+							if (!skel.breakpoint('large').active)
+								return;
+
+						// Deactivate.
+							$sidebar.addClass('inactive');
+
+					});
+
+			// Scroll lock.
+			// Note: If you do anything to change the height of the sidebar's content, be sure to
+			// trigger 'resize.sidebar-lock' on $window so stuff doesn't get out of sync.
+
+				$window.on('load.sidebar-lock', function() {
+
+					var sh, wh, st;
+
+					// Reset scroll position to 0 if it's 1.
+						if ($window.scrollTop() == 1)
+							$window.scrollTop(0);
+
+					$window
+						.on('scroll.sidebar-lock', function() {
+
+							var x, y;
+
+							// IE<10? Bail.
+								if (skel.vars.IEVersion < 10)
+									return;
+
+							// <=large? Bail.
+								if (skel.breakpoint('large').active) {
+
+									$sidebar_inner
+										.data('locked', 0)
+										.css('position', '')
+										.css('top', '');
+
+									return;
+
+								}
+
+							// Calculate positions.
+								x = Math.max(sh - wh, 0);
+								y = Math.max(0, $window.scrollTop() - x);
+
+							// Lock/unlock.
+								if ($sidebar_inner.data('locked') == 1) {
+
+									if (y <= 0)
+										$sidebar_inner
+											.data('locked', 0)
+											.css('position', '')
+											.css('top', '');
+									else
+										$sidebar_inner
+											.css('top', -1 * x);
+
+								}
+								else {
+
+									if (y > 0)
+										$sidebar_inner
+											.data('locked', 1)
+											.css('position', 'fixed')
+											.css('top', -1 * x);
+
+								}
+
+						})
+						.on('resize.sidebar-lock', function() {
+
+							// Calculate heights.
+								wh = $window.height();
+								sh = $sidebar_inner.outerHeight() + 30;
+
+							// Trigger scroll.
+								$window.trigger('scroll.sidebar-lock');
+
+						})
+						.trigger('resize.sidebar-lock');
+
+					});
+
+		// Menu.
+			var $menu = $('#menu'),
+				$menu_openers = $menu.children('ul').find('.opener');
+
+			// Openers.
+				$menu_openers.each(function() {
+
+					var $this = $(this);
+
+					$this.on('click', function(event) {
+
+						// Prevent default.
+							event.preventDefault();
+
+						// Toggle.
+							$menu_openers.not($this).removeClass('active');
+							$this.toggleClass('active');
+
+						// Trigger resize (sidebar lock).
+							$window.triggerHandler('resize.sidebar-lock');
+
+					});
+
+				});
 
 	});
 
